@@ -16,7 +16,7 @@ require (
 	github.com/miekg/dns v1.1.50
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/sys v0.0.0-20220513210249-45d2b4557a2a
+	golang.org/x/sys v0.47.0
 )
 
 require (
