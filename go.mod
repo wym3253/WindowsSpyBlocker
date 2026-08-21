@@ -1,6 +1,6 @@
 module github.com/crazy-max/WindowsSpyBlocker
 
-go 1.18
+go 1.26.0
 
 require (
 	github.com/0xrawsec/golang-evtx v1.2.9
@@ -11,8 +11,6 @@ require (
 	github.com/cevaris/ordered_map v0.0.0-20190319150403-3adeae072e73
 	github.com/go-ole/go-ole v1.2.6
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
-	github.com/josephspurrier/goversioninfo v1.4.0
-	github.com/kevinburke/go-bindata v3.24.0+incompatible
 	github.com/magefile/mage v1.14.0
 	github.com/mcuadros/go-version v0.0.0-20190830083331-035f6764e8d2
 	github.com/miekg/dns v1.1.50
@@ -28,6 +26,8 @@ require (
 	github.com/akyoto/tty v0.1.4 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.0 // indirect
+	github.com/josephspurrier/goversioninfo v1.4.0 // indirect
+	github.com/kevinburke/go-bindata v3.24.0+incompatible // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/thedevsaddam/gojsonq/v2 v2.5.2 // indirect
 	golang.org/x/mod v0.4.2 // indirect
@@ -35,4 +35,10 @@ require (
 	golang.org/x/tools v0.1.6-0.20210726203631-07bc1bf47fb2 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
+)
+
+tool (
+	github.com/josephspurrier/goversioninfo/cmd/goversioninfo
+	github.com/kevinburke/go-bindata/go-bindata
+	github.com/magefile/mage
 )
