@@ -80,7 +80,6 @@ type conf struct {
 type settings struct {
 	Uris struct {
 		LatestVersion string `json:"latestVersion"`
-		Threatcrowd   string `json:"threatcrowd"`
 		Whatis        string `json:"whatis"`
 		Dnsquery      string `json:"dnsquery"`
 		Ipapi         string `json:"ipapi"`

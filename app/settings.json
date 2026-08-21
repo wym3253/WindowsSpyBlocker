@@ -1,7 +1,6 @@
 {
   "uris": {
     "latestVersion": "https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/.res/latest",
-    "threatcrowd": "https://www.threatcrowd.org/searchApi/v2/%s/report/?%s=%s",
     "whatis": "https://whatismyipaddress.com/ip/",
     "dnsquery": "https://dnsquery.org/whois/",
     "ipapi": "http://ip-api.com/json/",

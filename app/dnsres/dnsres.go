@@ -4,16 +4,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"sort"
 	"strings"
 	"time"
 
-	"github.com/crazy-max/WindowsSpyBlocker/app/utils/config"
-	"github.com/crazy-max/WindowsSpyBlocker/app/utils/file"
-	"github.com/crazy-max/WindowsSpyBlocker/app/utils/netu"
+	vt "github.com/VirusTotal/vt-go"
 	"github.com/crazy-max/WindowsSpyBlocker/app/utils/pathu"
 )
 
@@ -21,31 +21,10 @@ import (
 const (
 	HttpTimeout  = 10
 	CacheTimeout = 172800
+
+	virusTotalAPIKeyEnv = "VT_API_KEY"
+	virusTotalResPath   = "%s/%s/resolutions"
 )
-
-type dataIp struct {
-	ResponseCode  string `json:"response_code"`
-	ResolutionsIp []struct {
-		LastResolved string `json:"last_resolved"`
-		Domain       string `json:"domain"`
-	} `json:"resolutions"`
-	Hashes     []string `json:"hashes"`
-	References []string `json:"references"`
-	Permalink  string   `json:"permalink"`
-}
-
-type dataDomain struct {
-	ResponseCode      string `json:"response_code"`
-	ResolutionsDomain []struct {
-		LastResolved string `json:"last_resolved"`
-		IPAddress    string `json:"ip_address"`
-	} `json:"resolutions"`
-	Hashes     []string `json:"hashes"`
-	Emails     []string `json:"emails"`
-	Subdomains []string `json:"subdomains"`
-	References []string `json:"references"`
-	Permalink  string   `json:"permalink"`
-}
 
 // GetDnsRes returns the DNS resolutions of an ip address or domain
 func GetDnsRes(ipAddressOrDomain string) Resolutions {
@@ -56,12 +35,7 @@ func GetDnsRes(ipAddressOrDomain string) Resolutions {
 
 	if resultTmpInfo, err := os.Stat(resultFile); err == nil {
 		resultTmpModified := time.Since(resultTmpInfo.ModTime()).Seconds()
-		if resultTmpModified > CacheTimeout {
-			fmt.Printf("Creating file %s... ", resultFile)
-			if err := file.CreateFile(resultFile); err != nil {
-				return result
-			}
-		} else {
+		if resultTmpModified <= CacheTimeout {
 			raw, err := os.ReadFile(resultFile)
 			if err != nil {
 				return result
@@ -78,11 +52,14 @@ func GetDnsRes(ipAddressOrDomain string) Resolutions {
 	}
 
 	reportType := "domain"
-	if netu.IsValidIPv4(ipAddressOrDomain) {
+	if net.ParseIP(ipAddressOrDomain) != nil {
 		reportType = "ip"
 	}
 
-	result, _ = getOnline(reportType, ipAddressOrDomain)
+	result, err := getOnline(reportType, ipAddressOrDomain)
+	if err != nil {
+		return result
+	}
 	resultJson[ipAddressOrDomain] = result
 	resultJsonMarsh, _ := json.Marshal(resultJson)
 	_ = os.WriteFile(resultFile, resultJsonMarsh, 0644)
@@ -91,62 +68,55 @@ func GetDnsRes(ipAddressOrDomain string) Resolutions {
 
 func getOnline(reportType string, ipOrDomain string) (Resolutions, error) {
 	var result Resolutions
-	uri := fmt.Sprintf(config.Settings.Uris.Threatcrowd, reportType, reportType, ipOrDomain)
 
-	timeout := HttpTimeout * time.Second
-	httpClient := http.Client{
-		Timeout: timeout,
-	}
-	resp, err := httpClient.Get(uri)
-	if err != nil {
-		return result, err
+	apiKey := strings.TrimSpace(os.Getenv(virusTotalAPIKeyEnv))
+	if apiKey == "" {
+		return result, fmt.Errorf("%s is not set", virusTotalAPIKeyEnv)
 	}
 
-	defer resp.Body.Close()
-
-	if resp.StatusCode == 403 {
-		return result, errors.New("Exceeded maximum number of API calls")
-	}
-
+	collection := "domains"
 	if reportType == "ip" {
-		var dataIp dataIp
-		err = json.NewDecoder(resp.Body).Decode(&dataIp)
-		if err != nil {
-			return result, err
-		}
-		if dataIp.ResponseCode != "1" || len(dataIp.ResolutionsIp) == 0 {
-			err := errors.New("No data available")
-			return result, err
-		}
-		for _, resolve := range dataIp.ResolutionsIp {
-			lastResolved, _ := time.Parse("2006-01-02", resolve.LastResolved)
-			result = append(result, Resolution{
-				Source:       uri,
-				LastResolved: lastResolved,
-				IpOrDomain:   strings.TrimSpace(strings.ReplaceAll(resolve.Domain, `"`, ``)),
-			})
-		}
-
-		sort.Sort(result)
-		return result, nil
+		collection = "ip_addresses"
 	}
+	uri := vt.URL(virusTotalResPath, collection, url.PathEscape(ipOrDomain))
 
-	var dataDomain dataDomain
-	err = json.NewDecoder(resp.Body).Decode(&dataDomain)
+	client := vt.NewClient(apiKey, vt.WithHTTPClient(&http.Client{
+		Timeout: HttpTimeout * time.Second,
+	}))
+	it, err := client.Iterator(uri, vt.IteratorBatchSize(40))
 	if err != nil {
 		return result, err
 	}
-	if dataDomain.ResponseCode != "1" || len(dataDomain.ResolutionsDomain) == 0 {
-		err := errors.New("No data available")
+	defer it.Close()
+
+	for it.Next() {
+		obj := it.Get()
+		ipOrDomain, _ := obj.GetString("ip_address")
+		if reportType == "ip" {
+			ipOrDomain, _ = obj.GetString("host_name")
+		}
+		ipOrDomain = strings.TrimSpace(ipOrDomain)
+		if ipOrDomain == "" {
+			continue
+		}
+
+		lastResolved, err := obj.GetTime("date")
+		if err != nil {
+			continue
+		}
+
+		result = append(result, Resolution{
+			Source:       obj.Links().Self,
+			LastResolved: lastResolved.UTC(),
+			IpOrDomain:   ipOrDomain,
+		})
+	}
+	if err := it.Error(); err != nil {
 		return result, err
 	}
-	for _, resolve := range dataDomain.ResolutionsDomain {
-		lastResolved, _ := time.Parse("2006-01-02", resolve.LastResolved)
-		result = append(result, Resolution{
-			Source:       uri,
-			LastResolved: lastResolved,
-			IpOrDomain:   resolve.IPAddress,
-		})
+
+	if len(result) == 0 {
+		return result, errors.New("No data available")
 	}
 
 	sort.Sort(result)
