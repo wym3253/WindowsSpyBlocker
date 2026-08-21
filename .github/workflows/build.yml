@@ -1,18 +1,19 @@
 name: build
 
-# https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#permissions
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 on:
-  pull_request:
-    branches:
-      - 'master'
   push:
     branches:
       - 'master'
     tags:
       - '*.*.*'
+  pull_request:
 
 env:
   VERSION: "0.0.0"
@@ -21,8 +22,7 @@ jobs:
   release:
     runs-on: windows-latest
     permissions:
-      # required to create GitHub release
-      contents: write
+      contents: write # required to create GitHub release
     steps:
       -
         name: Prepare
@@ -33,28 +33,28 @@ jobs:
         shell: bash
       -
         name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       -
         name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: 1.19
           cache: true
       -
         name: Mage build
-        uses: magefile/mage-action@v2
+        uses: magefile/mage-action@a662bd8c29d8106879588cfff83b2faf6e6f59db # v4.0.0
         with:
           version: latest
           args: build
       -
         name: Mage chocoPack
-        uses: magefile/mage-action@v2
+        uses: magefile/mage-action@a662bd8c29d8106879588cfff83b2faf6e6f59db # v4.0.0
         with:
           version: latest
           args: chocoPack
       -
         name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: WindowsSpyBlocker
           path: |
@@ -62,7 +62,7 @@ jobs:
             bin/windowsspyblocker.${{ env.VERSION }}.nupkg
       -
         name: GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           draft: true
@@ -72,7 +72,7 @@ jobs:
           name: ${{ env.VERSION }}
       -
         name: Mage chocoPush
-        uses: magefile/mage-action@v2
+        uses: magefile/mage-action@a662bd8c29d8106879588cfff83b2faf6e6f59db # v4.0.0
         if: startsWith(github.ref, 'refs/tags/')
         env:
           CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
