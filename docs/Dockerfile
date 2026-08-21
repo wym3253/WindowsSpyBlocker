@@ -1,16 +1,19 @@
-FROM squidfunk/mkdocs-material:7.2.6
+# syntax=docker/dockerfile:1
 
-RUN apk add --no-cache \
-    git \
-    git-fast-import \
-    openssl \
-  && apk add --no-cache --virtual .build gcc musl-dev \
+ARG MKDOCS_VERSION="9.7.5"
+
+FROM squidfunk/mkdocs-material:${MKDOCS_VERSION} AS base
+RUN apk add --no-cache git git-fast-import openssl gcc musl-dev \
   && pip install --no-cache-dir \
-    'lunr' \
-    'markdown-include' \
-    'mkdocs-awesome-pages-plugin' \
-    'mkdocs-exclude' \
-    'mkdocs-git-revision-date-localized-plugin' \
-    'mkdocs-macros-plugin' \
-  && apk del .build gcc musl-dev \
-  && rm -rf /tmp/*
+    'lunr==0.8.0' \
+    'markdown-include==0.8.1' \
+    'mkdocs-exclude==1.0.2' \
+    'mkdocs-git-revision-date-localized-plugin==1.5.1' \
+    'mkdocs-macros-plugin==1.5.0'
+
+FROM base AS generate
+RUN --mount=type=bind,target=. \
+  mkdocs build --strict --site-dir /out
+
+FROM scratch AS release
+COPY --from=generate /out /

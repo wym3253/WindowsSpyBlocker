@@ -49,14 +49,9 @@ jobs:
           fi
           echo "RELEASE=${RELEASE}" >> $GITHUB_ENV
       -
-        name: Build mkdocs Docker image
-        run: |
-          docker build -t mkdocs -f ./docs/Dockerfile ./docs/
-      -
         name: Build docs
         run: |
-          docker run --rm -v "$(pwd):/docs" mkdocs build --strict
-          sudo chown -R $(id -u):$(id -g) ./site
+          docker buildx build -f ./docs/Dockerfile --target release --output ./bin/site .
       -
         name: Check GitHub Pages status
         uses: crazy-max/ghaction-github-status@f0ef9e1cf727f9f76f8485f8c525fa03afc4ec02 # v5.0.0
@@ -68,6 +63,7 @@ jobs:
         uses: crazy-max/ghaction-github-pages@1d6ee9b181a81033a16bd707a1401afa978daab4 # v5.0.0
         with:
           target_branch: gh-pages
-          build_dir: site
+          build_dir: bin/site
+          jekyll: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
