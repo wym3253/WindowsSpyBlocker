@@ -1,6 +1,9 @@
 name: docs
 
-# https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#permissions
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -25,12 +28,11 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      # required to push to gh-pages
-      contents: write
+      contents: write # required to push to gh-pages
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
       -
@@ -57,13 +59,13 @@ jobs:
           sudo chown -R $(id -u):$(id -g) ./site
       -
         name: Check GitHub Pages status
-        uses: crazy-max/ghaction-github-status@v3
+        uses: crazy-max/ghaction-github-status@f0ef9e1cf727f9f76f8485f8c525fa03afc4ec02 # v5.0.0
         with:
           pages_threshold: major_outage
       -
         name: Deploy
         if: github.event_name != 'pull_request' && (endsWith(github.ref, github.event.repository.default_branch) || env.RELEASE == 'true')
-        uses: crazy-max/ghaction-github-pages@v3
+        uses: crazy-max/ghaction-github-pages@1d6ee9b181a81033a16bd707a1401afa978daab4 # v5.0.0
         with:
           target_branch: gh-pages
           build_dir: site
