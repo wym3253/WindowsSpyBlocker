@@ -79,11 +79,10 @@ func Download() error {
 func Generate() error {
 	mg.Deps(Download)
 	mg.Deps(appConf)
-	mg.Deps(manifest)
 	mg.Deps(versionInfo)
 
 	fmt.Println("⚙️ Go generate...")
-	if err := sh.RunV(mg.GoCmd(), "generate", "-v"); err != nil {
+	if err := sh.RunWithV(wsbEnv, mg.GoCmd(), "generate", "-v"); err != nil {
 		return err
 	}
 
@@ -263,45 +262,6 @@ func appConf() error {
 	}{
 		Version: tag(),
 	})
-}
-
-// manifest generates manifest for versioninfo
-func manifest() error {
-	fmt.Println("🔨 Generating app.manifest...")
-
-	file, err := os.Create("app.manifest")
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	_, err = io.WriteString(file, `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
-    <application>
-      <!--This Id value indicates the application supports Windows 7 functionality-->
-      <supportedOS Id="{35138b9a-5d96-4fbd-8e2d-a2440225f93a}"/>
-      <!--This Id value indicates the application supports Windows 8 functionality-->
-      <supportedOS Id="{4a2f28e3-53b9-4441-ba9c-d69d4a4a6e38}"/>
-      <!--This Id value indicates the application supports Windows 8.1 functionality-->
-      <supportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}"/>
-      <!--This Id value indicates the application supports Windows 10 functionality-->
-      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/>
-    </application>
-  </compatibility>
-  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
-    <security>
-      <requestedPrivileges>
-        <requestedExecutionLevel level="requireAdministrator" uiAccess="false"/>
-      </requestedPrivileges>
-    </security>
-  </trustInfo>
-</assembly>`)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // versionInfo generates versioninfo.json
