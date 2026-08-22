@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/0xrawsec/golang-evtx v1.2.9
-	github.com/PuerkitoBio/goquery v1.8.0
+	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/VirusTotal/vt-go v1.1.0
 	github.com/akyoto/color v1.8.12
 	github.com/cavaliergopher/grab/v3 v3.0.1
@@ -24,16 +24,16 @@ require (
 	github.com/akavel/rsrc v0.10.2 // indirect
 	github.com/akyoto/colorable v0.1.7 // indirect
 	github.com/akyoto/tty v0.1.4 // indirect
-	github.com/andybalholm/cascadia v1.3.1 // indirect
+	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/davecgh/go-spew v1.1.0 // indirect
 	github.com/josephspurrier/goversioninfo v1.4.0 // indirect
 	github.com/kevinburke/go-bindata v3.24.0+incompatible // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/thedevsaddam/gojsonq/v2 v2.5.2 // indirect
-	golang.org/x/mod v0.4.2 // indirect
-	golang.org/x/net v0.0.0-20210916014120-12bc252f5db8 // indirect
-	golang.org/x/tools v0.1.6-0.20210726203631-07bc1bf47fb2 // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	golang.org/x/mod v0.17.0 // indirect
+	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )
 
