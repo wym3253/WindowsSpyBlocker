@@ -13,7 +13,7 @@ require (
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
 	github.com/magefile/mage v1.17.2
 	github.com/mcuadros/go-version v0.0.0-20190830083331-035f6764e8d2
-	github.com/miekg/dns v1.1.72
+	github.com/miekg/dns v1.1.73
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.12.1
 	golang.org/x/sys v0.47.0
@@ -29,10 +29,7 @@ require (
 	github.com/kevinburke/go-bindata v3.24.0+incompatible // indirect
 	github.com/thedevsaddam/gojsonq/v2 v2.5.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/mod v0.31.0 // indirect
-	golang.org/x/net v0.52.0 // indirect
-	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/tools v0.40.0 // indirect
+	golang.org/x/net v0.57.0 // indirect
 )
 
 tool (
